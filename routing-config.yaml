@@ -1,0 +1,76 @@
+# =============================================================================
+# IT Ticket Auto-Router — Control Panel
+# -----------------------------------------------------------------------------
+# This is the ONLY file you normally need to edit.
+# Change a percentage, a skill, or pause the agent here, then commit.
+# The routine reads this file fresh on every run.
+# =============================================================================
+
+# --- Kill switch -------------------------------------------------------------
+# Set to false to pause ALL assignment immediately on the next run.
+# (The agent checks this first and does nothing else if false.)
+enabled: true
+
+# --- When the agent is allowed to act ----------------------------------------
+# The routine fires hourly; these bounds make it act only in business hours.
+business_hours:
+  timezone: "Europe/Berlin"
+  start_hour: 8          # first hour it may act (08:00)
+  end_hour: 17           # last hour it may act (17:00)
+  active_days: [Mon, Tue, Wed, Thu, Fri]
+
+# --- Jira scope --------------------------------------------------------------
+jira:
+  project_key: "SPAITSM"                       # <-- CONFIRM: IT / ITSUP / etc.
+  # Tickets considered "needs assignment" — adjust if your workflow differs.
+  unassigned_jql: 'project = {project_key} AND assignee IS EMPTY AND statusCategory NOT IN (CANCELLED, RESOLVED, DONE)'
+  # How current workload is measured when balancing toward targets.
+  # "open" = count each person's not-Done tickets in this project.
+  load_basis: "open"
+
+# --- Assignment strategy -----------------------------------------------------
+# load_balanced  : among skill-eligible people, pick whoever is FURTHEST below
+#                  their target_pct share right now. Drives real distribution
+#                  toward your targets and is fully explainable. (recommended)
+# weighted_random: pick randomly, weighted by target_pct. Simpler, drifts more.
+strategy: "load_balanced"
+
+# What to do when a ticket matches NO ONE's skills:
+#   fallback_to_all = true  -> route by percentage among the whole team
+#   fallback_to_all = false -> leave unassigned, flag it in the run summary
+fallback_to_all: true
+
+# --- Team --------------------------------------------------------------------
+# target_pct values should sum to 100. The agent warns if they don't.
+# account_id: Atlassian accountId (NOT display name). See README for how to get these.
+# skills: lowercase keywords matched against the ticket summary + description.
+team:
+  - name: "Mateusz Maslowski"
+    account_id: "712020:be1ab9db-f323-4c30-b3dd-26f133acac68"
+    skills: [okta, iru, user access, security incident, hardware purchase, Critical priority tickets, System incident]
+    target_pct: 15
+
+  - name: "Luka Perez y Perez"
+    account_id: "712020:c711cecd-7102-419c-828d-e188a3eb1871"
+    skills: [hardware in Germany, hardware purchase, access request, onboarding and offboarding in Germany, System incident]
+    target_pct: 25
+
+  - name: "Jordan Klimczak"
+    account_id: "712020:fbfd0a88-df7f-497a-b6a4-346c577bdab1"
+    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, System incident]
+    target_pct: 25
+
+  - name: "Jan Lentzen"
+    account_id: "61d86d768534980073d785c8"
+    skills: [software, application, support, install, access]
+    target_pct: 15
+    
+  - name: "Malgorzata Baranowska"
+    account_id: "712020:a45d315b-01ec-4e85-898c-ee6608448723"
+    skills: [software, application, support, install, laptop, printer, onboarding, offboarding, license, okta, access, provisioning]
+    target_pct: 20
+
+# --- Reporting (optional) ----------------------------------------------------
+# Leave channel empty ("") to skip the Slack summary.
+slack:
+  channel: "it-jsm-project"            # e.g. "#it-ops" or a channel ID
