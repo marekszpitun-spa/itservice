@@ -1,0 +1,104 @@
+# =============================================================================
+# IT Ticket Auto-Router — Control Panel
+# -----------------------------------------------------------------------------
+# This is the ONLY file you normally need to edit.
+# Change a percentage, a skill, a rule, or pause the agent here, then commit.
+# The routine reads this file fresh on every run.
+# =============================================================================
+
+# --- Kill switch -------------------------------------------------------------
+# Set to false to pause ALL assignment immediately on the next run.
+# (The agent checks this first and does nothing else if false.)
+enabled: true
+
+# --- When the agent is allowed to act ----------------------------------------
+# The routine fires hourly; these bounds make it act only in business hours.
+business_hours:
+  timezone: "Europe/Berlin"
+  start_hour: 8          # first hour it may act (08:00)
+  end_hour: 17           # last hour it may act (17:00)
+  active_days: [Mon, Tue, Wed, Thu, Fri]
+
+# --- Jira scope --------------------------------------------------------------
+jira:
+  project_key: "SPAITSM"
+  # Tickets considered "needs assignment".
+  # NOTE: the status names below must match your workflow EXACTLY. Confirm under
+  # Project settings -> Statuses (watch spelling, e.g. Cancelled vs Canceled).
+  unassigned_jql: 'project = SPAITSM AND assignee IS EMPTY AND status NOT IN (Cancelled, Resolved, Done)'
+  # How current workload is measured when balancing toward targets.
+  # "open" = count each person's not-Done tickets in this project.
+  load_basis: "open"
+
+# --- Assignment strategy -----------------------------------------------------
+# Evaluation order per ticket: priority_routing -> region gate -> skill match.
+#
+# load_balanced  : among eligible people, pick whoever is FURTHEST below their
+#                  target_pct share right now. Drives real distribution toward
+#                  your targets and is fully explainable. (recommended)
+# weighted_random: pick randomly, weighted by target_pct. Simpler, drifts more.
+strategy: "load_balanced"
+
+# What to do when a ticket matches NO ONE's skills (after region gating):
+#   fallback_to_all = true  -> route by percentage among the eligible team
+#   fallback_to_all = false -> leave unassigned, flag it in the run summary
+fallback_to_all: true
+
+# --- Priority routing --------------------------------------------------------
+# Evaluated FIRST, before region and skills. If a ticket's priority matches a
+# key here, it routes straight to the named member(s), bypassing skill/region.
+# Use for must-own categories like critical incidents.
+# Value may be a single name or a list of names (load-balanced among them).
+# Priority names must match your Jira priority scheme EXACTLY (case-insensitive).
+# Confirm under Project settings -> Priorities. JSM default is often
+# Highest/High/Medium/Low/Lowest — adjust the key below if yours differs.
+priority_routing:
+  Critical: "Mateusz Maslowski"      # <-- CONFIRM the exact priority name
+
+# --- Region routing ----------------------------------------------------------
+# A GATE applied before skill matching.
+# region_field: the Jira field holding the ticket's country/site/region.
+#   Set to the field name or custom field id (e.g. "customfield_10056").
+#   Leave "" to DISABLE region gating (every member treated as region-agnostic).
+# A member with a non-empty `regions` list is eligible ONLY for tickets whose
+# region value is in their list. Members without `regions` are eligible anywhere.
+# Region values must match what the field actually contains (case-insensitive).
+region_field: ""        # <-- SET to the real field to activate region routing
+
+# --- Team --------------------------------------------------------------------
+# target_pct values should sum to 100. The agent warns if they don't.
+# account_id: Atlassian accountId (NOT display name).
+# skills: lowercase keywords matched against the ticket summary + description.
+# regions (optional): restricts the member to tickets from those regions.
+team:
+  - name: "Mateusz Maslowski"
+    account_id: "712020:be1ab9db-f323-4c30-b3dd-26f133acac68"
+    skills: [okta, iru, user access, security incident, hardware purchase, system incident]
+    target_pct: 15
+
+  - name: "Luka Perez y Perez"
+    account_id: "712020:c711cecd-7102-419c-828d-e188a3eb1871"
+    skills: [hardware purchase, access request, onboarding, offboarding, system incident]
+    regions: [Germany]
+    target_pct: 25
+
+  - name: "Jordan Klimczak"
+    account_id: "712020:fbfd0a88-df7f-497a-b6a4-346c577bdab1"
+    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident]
+    target_pct: 25
+
+  - name: "Jan Lentzen"
+    account_id: "61d86d768534980073d785c8"
+    skills: [software, application, support, install, access]
+    regions: [Germany]
+    target_pct: 15
+
+  - name: "Malgorzata Baranowska"
+    account_id: "712020:a45d315b-01ec-4e85-898c-ee6608448723"
+    skills: [software, application, support, install, laptop, printer, onboarding, offboarding, license, okta, access, provisioning]
+    target_pct: 20
+
+# --- Reporting (optional) ----------------------------------------------------
+# Leave channel empty ("") to skip the Slack summary.
+slack:
+  channel: "it-jsm-project"            # e.g. "#it-ops" or a channel ID
