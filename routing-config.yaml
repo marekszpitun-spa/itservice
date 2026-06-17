@@ -12,11 +12,14 @@
 enabled: true
 
 # --- When the agent is allowed to act ----------------------------------------
-# The routine fires hourly; these bounds make it act only in business hours.
+# Schedule: the routine is triggered ONCE per working day at 11:00, set in the
+# routine's Scheduled trigger (cron: 0 11 * * 1-5, timezone Europe/Berlin).
+# The bounds below are a safety guard only: if a run is ever started manually or
+# off-schedule, the agent still acts only on a weekday within these hours.
 business_hours:
   timezone: "Europe/Berlin"
-  start_hour: 8          # first hour it may act (08:00)
-  end_hour: 17           # last hour it may act (17:00)
+  start_hour: 8          # guard: earliest hour the agent may act
+  end_hour: 17           # guard: latest hour the agent may act
   active_days: [Mon, Tue, Wed, Thu, Fri]
 
 # --- Jira scope --------------------------------------------------------------
@@ -90,7 +93,6 @@ team:
   - name: "Jan Lentzen"
     account_id: "61d86d768534980073d785c8"
     skills: [software, application, support, install, access]
-    regions: [Germany]
     target_pct: 15
 
   - name: "Malgorzata Baranowska"

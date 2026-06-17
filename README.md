@@ -1,9 +1,8 @@
 # IT Ticket Auto-Router
 
 A Claude Code Cloud Routine that assigns unassigned IT Jira tickets to team members based
-on priority, region, skills, and configurable target percentages. Runs hourly on
-Anthropic's cloud (works when your laptop is closed); acts only during the configured
-business-hours window.
+on priority, region, skills, and configurable target percentages. Runs once per working
+day at 11:00 (Europe/Berlin) on Anthropic's cloud — works when your laptop is closed.
 
 ## Files
 - `routing-config.yaml` — the control panel. Edit this to change percentages, skills,
