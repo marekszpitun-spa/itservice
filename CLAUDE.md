@@ -13,6 +13,11 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
 - **Stay in scope.** Your only permitted write action is setting the *assignee* field on
   tickets matched by the configured JQL. Do not edit any other field, transition status,
   comment, close, or touch any ticket that already has an assignee.
+- **Never touch a closed ticket.** Before assigning ANY ticket, re-read its
+  `statusCategory`. If it is `Done` (this covers Done, Resolved, Cancelled, and any other
+  Done-category status), SKIP it and flag it in the summary — even if the JQL returned it.
+  This is an independent safety net: a JQL leak must never result in a closed ticket being
+  assigned or reopened. Do not rely on the JQL alone to exclude closed work.
 - **Fail safe.** If the config is missing, malformed, or `enabled: false`, do nothing and
   report why. If a single ticket fails, skip it, keep going, and note it in the summary.
 
@@ -34,8 +39,10 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
    toward targets — Jira is the persistent source of truth, since each run starts fresh.
 
 5. **Assign each ticket** (oldest first). Evaluate the rules in this order:
-   a. Read the ticket's `summary`, `description`, `priority`, and — if `region_field` is
-      configured — the value of that region field. Build matchable text = summary +
+   a. Read the ticket's `summary`, `description`, `priority`, `statusCategory`, and — if
+      `region_field` is configured — the value of that region field. **If
+      `statusCategory` is `Done`, SKIP the ticket immediately and flag it (closed-ticket
+      safety net); do not assign.** Otherwise build matchable text = summary +
       description, lowercased.
    b. **Priority routing (highest precedence).** If the ticket's priority matches a key
       in `priority_routing` (case-insensitive), the eligible set = the member(s) named
