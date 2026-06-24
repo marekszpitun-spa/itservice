@@ -76,18 +76,18 @@ region_field: ""        # <-- SET to the real field to activate region routing
 team:
   - name: "Mateusz Maslowski"
     account_id: "712020:be1ab9db-f323-4c30-b3dd-26f133acac68"
-    skills: [okta, iru, user access, security incident, hardware purchase, system incident]
+    skills: [okta, iru, user access, security incident, hardware purchase, system incident, software, license]
     target_pct: 15
 
   - name: "Luka Perez y Perez"
     account_id: "712020:c711cecd-7102-419c-828d-e188a3eb1871"
-    skills: [hardware purchase, access request, onboarding, offboarding, system incident]
+    skills: [hardware purchase, access request, onboarding, offboarding, system incident, software, license]
     regions: [Germany]
     target_pct: 25
 
   - name: "Jordan Klimczak"
     account_id: "712020:fbfd0a88-df7f-497a-b6a4-346c577bdab1"
-    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident]
+    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident, software]
     target_pct: 25
 
   - name: "Jan Lentzen"
