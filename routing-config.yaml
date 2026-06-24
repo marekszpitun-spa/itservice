@@ -28,7 +28,7 @@ jira:
   # Tickets considered "needs assignment".
   # NOTE: the status names below must match your workflow EXACTLY. Confirm under
   # Project settings -> Statuses (watch spelling, e.g. Cancelled vs Canceled).
-  unassigned_jql: 'project = SPAITSM AND assignee IS EMPTY AND status NOT IN (Cancelled, Resolved, Done)'
+  unassigned_jql: 'project = SPAITSM AND assignee IS EMPTY AND statusCategory != Done'
   # How current workload is measured when balancing toward targets.
   # "open" = count each person's not-Done tickets in this project.
   load_basis: "open"
