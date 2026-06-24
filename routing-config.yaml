@@ -26,8 +26,10 @@ business_hours:
 jira:
   project_key: "SPAITSM"
   # Tickets considered "needs assignment".
-  # NOTE: the status names below must match your workflow EXACTLY. Confirm under
-  # Project settings -> Statuses (watch spelling, e.g. Cancelled vs Canceled).
+  # Uses statusCategory, NOT status names: this instance has duplicate status
+  # names (e.g. more than one status called "Cancelled"), so name-based
+  # exclusion leaks cancelled tickets. statusCategory != Done reliably excludes
+  # every Done-category status (Done, Resolved, Cancelled) regardless of dupes.
   unassigned_jql: 'project = SPAITSM AND assignee IS EMPTY AND statusCategory != Done'
   # How current workload is measured when balancing toward targets.
   # "open" = count each person's not-Done tickets in this project.
@@ -46,6 +48,14 @@ strategy: "load_balanced"
 #   fallback_to_all = true  -> route by percentage among the eligible team
 #   fallback_to_all = false -> leave unassigned, flag it in the run summary
 fallback_to_all: true
+
+# Cap on how many tickets ONE person can be assigned in a SINGLE run. Once a
+# member reaches this many assignments this run, they are excluded from all
+# further eligibility (priority, skill, and fallback). If every eligible member
+# for a ticket is capped, the ticket is left unassigned and flagged — it will be
+# picked up on the next run. Prevents one under-loaded person absorbing a whole
+# day's backlog at once.
+max_per_run_per_person: 3
 
 # --- Priority routing --------------------------------------------------------
 # Evaluated FIRST, before region and skills. If a ticket's priority matches a
@@ -76,18 +86,18 @@ region_field: ""        # <-- SET to the real field to activate region routing
 team:
   - name: "Mateusz Maslowski"
     account_id: "712020:be1ab9db-f323-4c30-b3dd-26f133acac68"
-    skills: [okta, iru, user access, security incident, hardware purchase, system incident, software, license]
+    skills: [okta, iru, user access, security incident, hardware purchase, system incident]
     target_pct: 15
 
   - name: "Luka Perez y Perez"
     account_id: "712020:c711cecd-7102-419c-828d-e188a3eb1871"
-    skills: [hardware purchase, access request, onboarding, offboarding, system incident, software, license]
+    skills: [hardware purchase, access request, onboarding, offboarding, system incident]
     regions: [Germany]
     target_pct: 25
 
   - name: "Jordan Klimczak"
     account_id: "712020:fbfd0a88-df7f-497a-b6a4-346c577bdab1"
-    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident, software]
+    skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident]
     target_pct: 25
 
   - name: "Jan Lentzen"
