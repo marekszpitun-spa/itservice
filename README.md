@@ -23,16 +23,23 @@ Per ticket, the agent evaluates rules in this order:
    the ticket text.
 4. **Selection** — `load_balanced` picks whoever is furthest below their target %.
 
+At every stage, anyone whose Slack status clearly shows they're out today (OOO, vacation,
+travel, sick, etc.) is excluded from that ticket's eligible set — see `availability_check`
+in the config. Set it to `false` to disable this if the Slack connector is misbehaving.
+
 ## To finish / verify setup
 1. `jira.project_key` and `unassigned_jql` use your real project (`SPAITSM`); confirm the
    **status names** (Cancelled/Resolved/Done) match your workflow exactly.
 2. `priority_routing` key (`Critical`) matches your real Jira priority scheme.
 3. Target percentages in `team` sum to 100 (`keyword_routing` members are excluded from
    this — they take no percentage).
-4. Slack connector attached to the routine and `slack.channel` is correct.
+4. Every `team`/`keyword_routing` member has a real `slack_user_id` (not a placeholder) —
+   otherwise the availability check can't run for them and they default to available.
+5. Slack connector attached to the routine and `slack.channel` is correct.
 
-## How to get Atlassian accountIds (easiest first)
-- **Ask Claude (with the Atlassian connector on):** e.g. "Look up the accountId for these
-  emails: …" — it resolves directly.
-- **From a profile URL:** the accountId is in the Jira profile URL.
-- **Admin console:** Atlassian admin → User management.
+## How to get Atlassian accountIds / Slack user IDs (easiest first)
+- **Ask Claude (with the connectors on):** e.g. "Look up the accountId and Slack user ID
+  for these emails: …" — it resolves both directly.
+- **Atlassian, from a profile URL:** the accountId is in the Jira profile URL.
+- **Atlassian admin console:** Atlassian admin → User management.
+- **Slack:** search by email in Slack's own member directory, or ask Claude as above.

@@ -49,6 +49,14 @@ strategy: "load_balanced"
 #   fallback_to_all = false -> leave unassigned, flag it in the run summary
 fallback_to_all: true
 
+# --- Availability check -------------------------------------------------------
+# Before assigning, the agent checks each candidate's Slack status (via
+# slack_user_id below). Anyone whose status clearly signals they're not working
+# today (out of office, vacation, travelling, sick, etc.) is skipped for this
+# run — even if they're otherwise the best/only match. Set to false to disable
+# the check entirely (e.g. Slack connector down) and assign as if everyone's in.
+availability_check: true
+
 # Cap on how many tickets ONE person can be assigned in a SINGLE run. Once a
 # member reaches this many assignments this run, they are excluded from all
 # further eligibility (priority, keyword, skill, and fallback). If every
@@ -82,35 +90,42 @@ priority_routing:
 keyword_routing:
   - name: "Bartosz Tomaszewski"
     account_id: "712020:90cfbf3f-5038-454f-a00b-2481879f54c1"
+    slack_user_id: "U07F596UTQR"     # bartosz.tomaszewski@sportalliance.com
     keywords: [network, wifi, wi-fi, hosting, odwijka]
 
 # --- Team --------------------------------------------------------------------
 # target_pct values should sum to 100. The agent warns if they don't.
 # account_id: Atlassian accountId (NOT display name).
+# slack_user_id: Slack user ID, used for the availability check above.
 # skills: lowercase keywords matched against the ticket summary + description.
 team:
   - name: "Mateusz Maslowski"
     account_id: "712020:be1ab9db-f323-4c30-b3dd-26f133acac68"
+    slack_user_id: "U09EAEZ8DD4"     # mateusz.maslowski@sportalliance.com
     skills: [okta, iru, user access, security incident, hardware purchase, system incident]
     target_pct: 15
 
   - name: "Luka Perez y Perez"
     account_id: "712020:c711cecd-7102-419c-828d-e188a3eb1871"
+    slack_user_id: "U0B1DD3GJ9E"     # luka.perez@sportalliance.com
     skills: [hardware purchase, access request, onboarding, offboarding, system incident]
     target_pct: 25
 
   - name: "Jordan Klimczak"
     account_id: "712020:fbfd0a88-df7f-497a-b6a4-346c577bdab1"
+    slack_user_id: "U085SD203B7"     # jordan.klimczak@sportalliance.com
     skills: [okta, access, provisioning, onboarding, offboarding, sso, hardware purchase, license, system incident]
     target_pct: 25
 
   - name: "Jan Lentzen"
     account_id: "61d86d768534980073d785c8"
+    slack_user_id: "U02TUMZMCLQ"     # jan.lentzen@sportalliance.com
     skills: [software, application, support, install, access]
     target_pct: 15
 
   - name: "Malgorzata Baranowska"
     account_id: "712020:a45d315b-01ec-4e85-898c-ee6608448723"
+    slack_user_id: "U08U2M2PMA8"     # malgorzata.baranowska@sportalliance.com
     skills: [software, application, support, install, laptop, printer, onboarding, offboarding, license, okta, access, provisioning]
     target_pct: 20
 
