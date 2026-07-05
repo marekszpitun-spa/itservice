@@ -48,8 +48,7 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
    toward targets — Jira is the persistent source of truth, since each run starts fresh.
 
 5. **Assign each ticket** (oldest first). Evaluate the rules in this order:
-   a. Read the ticket's `summary`, `description`, `priority`, `statusCategory`, and — if
-      `region_field` is configured — the value of that region field. **If
+   a. Read the ticket's `summary`, `description`, `priority`, and `statusCategory`. **If
       `statusCategory` is `Done`, SKIP the ticket immediately and flag it (closed-ticket
       safety net); do not assign.** Otherwise build matchable text = summary +
       description, lowercased.
@@ -57,25 +56,32 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
       in `priority_routing` (case-insensitive), the eligible set = the member(s) named
       there. Skip steps (c) and (d) and go to (e). Drop any named member whose
       `account_id` is missing/placeholder; if that empties the set, fall through to (c).
-   c. **Region gate.** Begin with the full team. If `region_field` is set AND the ticket
-      has a region value, exclude any member whose `regions` list is non-empty and does
-      NOT contain that value (case-insensitive). Members without a `regions` list stay
-      eligible everywhere. If `region_field` is empty or the ticket has no region value,
-      apply no region exclusions.
-   d. **Skill match.** Among the region-eligible members, eligible = those with at least
-      one `skills` keyword present in the text. If none are eligible and `fallback_to_all`
-      is true, eligible = the region-eligible members; if false, leave the ticket
-      unassigned and flag it.
+   c. **Keyword routing.** For each entry in `keyword_routing`, check if any of its
+      `keywords` appear in the text (case-insensitive substring match). If exactly one
+      entry matches, eligible set = that member alone — skip step (d) (skill match) and
+      go to (e). These members sit outside `team`/`target_pct` and are never part of
+      skill match or fallback. If multiple `keyword_routing` entries match the same
+      ticket, treat all matched members as eligible and go to (e), where `strategy`
+      breaks the tie (skip the `target_pct` comparison for these members and fall back
+      to alphabetical). If the matched member's `account_id` is missing/placeholder,
+      flag it and fall through to (d) instead of guessing.
+   d. **Skill match.** Begin with the full `team` (never `keyword_routing` members).
+      Eligible = those with at least one `skills` keyword present in the text. If none
+      are eligible and `fallback_to_all` is true, eligible = the full team; if false,
+      leave the ticket unassigned and flag it.
    e. **Apply the per-run cap.** Remove from the eligible set any member who has already
       been assigned `max_per_run_per_person` tickets in THIS run. (Applies to every path,
-      including priority routing and fallback.) If this empties the eligible set, leave the
-      ticket unassigned and flag it "deferred — all eligible members at per-run cap"; it
-      will be handled on the next run. Then go to (f).
+      including priority routing, keyword routing, and fallback.) If this empties the
+      eligible set, leave the ticket unassigned and flag it "deferred — all eligible
+      members at per-run cap"; it will be handled on the next run. Then go to (f).
    f. **Select** among the remaining eligible members per `strategy`:
       - `load_balanced`: compute each eligible member's current share of total load and
         pick the one whose share is furthest *below* their `target_pct`. Break ties by
         higher `target_pct`, then alphabetically. After assigning, increment that
         member's load locally so the next ticket in this same run balances correctly.
+        (`keyword_routing` members have no `target_pct` and no load tracked — this
+        comparison only happens when a ticket has more than one eligible member, which
+        for keyword routing only occurs if several entries match the same ticket.)
       - `weighted_random`: pick randomly with probability proportional to `target_pct`.
    g. **Set the assignee** to the selected member's `account_id` via an assignee-only
       update, then run the post-assignment status check (see guardrails). Increment that
@@ -84,8 +90,9 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
 6. **Report.** Produce a concise summary: counts, and one line per assignment naming the
    deciding rule, e.g.
    `SPAITSM-123 -> Mateusz Maslowski (priority=Critical)`
-   `SPAITSM-124 -> Luka Perez y Perez (region=Germany + matched "hardware purchase")`
+   `SPAITSM-124 -> Luka Perez y Perez (matched "hardware purchase")`
    `SPAITSM-125 -> Jordan Klimczak (matched "okta")`
+   `SPAITSM-126 -> Bartosz Tomaszewski (keyword="odwijka")`
    List any skipped/failed/unmatched tickets. If `slack.channel` is set, post the summary
    there; otherwise just return it.
 
@@ -93,5 +100,5 @@ as the source of truth. Follow these steps exactly and do nothing outside this s
 
 - Match the team's preferred internal style: concise and direct.
 - Prefer `account_id` for assignment. If an `account_id` is a placeholder, skip that
-  member and flag it rather than guessing.
+  member and flag it rather than guessing. Applies to both `team` and `keyword_routing`.
 - Never reassign a ticket that already has an assignee, even if a "better" match exists.
