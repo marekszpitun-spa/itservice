@@ -10,6 +10,10 @@
 # Set to false to pause ALL assignment immediately on the next run.
 # (The agent checks this first and does nothing else if false.)
 enabled: true
+# --- Dry run -------------------------------------------------------------
+# true = compute and report assignments, but write NOTHING to Jira.
+# Keep true until the migration test is signed off.
+dry_run: true
 
 # --- When the agent is allowed to act ----------------------------------------
 # Schedule: the routine is triggered ONCE per working day at 11:00, set in the
@@ -48,6 +52,10 @@ strategy: "load_balanced"
 #   fallback_to_all = true  -> route by percentage among the full team
 #   fallback_to_all = false -> leave unassigned, flag it in the run summary
 fallback_to_all: true
+# --- Keyword/skill matching mode -------------------------------------------
+# substring = current behaviour ("iru" also matches "virus").
+# word      = whole-word match only. Decided during the migration test.
+match_mode: "substring"
 
 # --- Availability check -------------------------------------------------------
 # Before assigning, the agent checks each candidate's Slack status (via
@@ -75,7 +83,7 @@ max_per_run_per_person: 3
 # Confirm under Project settings -> Priorities. JSM default is often
 # Highest/High/Medium/Low/Lowest — adjust the key below if yours differs.
 priority_routing:
-  Critical: "Mateusz Maslowski"      # <-- CONFIRM the exact priority name
+  Critical: "Mateusz Maslowski"
 
 # --- Keyword routing ----------------------------------------------------------
 # Evaluated SECOND, after priority routing and before skill match/load
@@ -132,4 +140,4 @@ team:
 # --- Reporting (optional) ----------------------------------------------------
 # Leave channel empty ("") to skip the Slack summary.
 slack:
-  channel: "it-jsm-project"            # e.g. "#it-ops" or a channel ID
+  channel: "<CHANNEL_ID>"            # itsm-router-test (migration test). Restore it-jsm-project for production.
