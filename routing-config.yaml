@@ -13,7 +13,7 @@ enabled: true
 # --- Dry run -------------------------------------------------------------
 # true = compute and report assignments, but write NOTHING to Jira.
 # Keep true until the migration test is signed off.
-dry_run: true
+dry_run: false
 
 # --- When the agent is allowed to act ----------------------------------------
 # Schedule: the routine is triggered ONCE per working day at 11:00, set in the
