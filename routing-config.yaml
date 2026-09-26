@@ -23,8 +23,8 @@ dry_run: true
 business_hours:
   timezone: "Europe/Berlin"
   start_hour: 8          # guard: earliest hour the agent may act
-  end_hour: 17           # guard: latest hour the agent may act
-  active_days: [Mon, Tue, Wed, Thu, Fri]
+  end_hour: 23           # TEMP weekend test 2026-09-26 — revert to 17
+  active_days: [Mon, Tue, Wed, Thu, Fri, Sat]   # TEMP weekend test 2026-09-26 — remove Sat
 
 # --- Jira scope --------------------------------------------------------------
 jira:
