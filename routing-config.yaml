@@ -147,6 +147,6 @@ team:
 # --- Reporting (optional) ----------------------------------------------------
 # Leave channel empty ("") to skip the Slack summary.
 slack:
-  channel: "<CHANNEL_ID>"            # itsm-router-test (migration test). Restore it-jsm-project for production.
+  channel: "C0C49HVNBNF"             # itsm-router-test (migration test). Restore it-jsm-project for production.
   # Post a summary even when there are no tickets (daily heartbeat).
   post_when_empty: true
