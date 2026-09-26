@@ -29,6 +29,10 @@ business_hours:
 # --- Jira scope --------------------------------------------------------------
 jira:
   project_key: "SPAITSM"
+  # REST API base for the svc-itsm-router service account (scoped token, Bearer auth).
+  api_base: "https://api.atlassian.com/ex/jira/158d2ea6-e8a7-4716-9042-bc0e6ca1b043"
+  # Used only to make ticket keys clickable in the Slack summary.
+  site_url: "https://sportalliance.atlassian.net"
   # Tickets considered "needs assignment".
   # Uses statusCategory, NOT status names: this instance has duplicate status
   # names (e.g. more than one status called "Cancelled"), so name-based
@@ -56,6 +60,9 @@ fallback_to_all: true
 # substring = current behaviour ("iru" also matches "virus").
 # word      = whole-word match only. Decided during the migration test.
 match_mode: "substring"
+# Shadow compare: each run also computes what the OTHER match_mode would
+# have assigned, and lists any differences in the summary. Never writes.
+shadow_compare: true
 
 # --- Availability check -------------------------------------------------------
 # Before assigning, the agent checks each candidate's Slack status (via
@@ -141,3 +148,5 @@ team:
 # Leave channel empty ("") to skip the Slack summary.
 slack:
   channel: "<CHANNEL_ID>"            # itsm-router-test (migration test). Restore it-jsm-project for production.
+  # Post a summary even when there are no tickets (daily heartbeat).
+  post_when_empty: true
