@@ -41,8 +41,9 @@ alert if a ticket's status changes after assignment (external Jira automation).
 
 ## Environment
 - `JIRA_API_TOKEN` — scoped token for the `svc-itsm-router` service account (Bearer).
-- `SLACK_BOT_TOKEN` — bot token with `chat:write`. For a private `slack.channel`, the
-  bot must be invited to the channel.
+- `SLACK_BOT_TOKEN` — bot token with `chat:write` (summary) and `users.profile:read`
+  (`assign.py --statuses`, which the agent reads to judge availability). For a private
+  `slack.channel`, the bot must be invited to the channel.
 
 ## To finish / verify setup
 1. `jira.project_key`, `unassigned_jql` and `jira.api_base` point at your real site and

@@ -6,7 +6,7 @@ The agent supplies only the Slack availability judgment, via --unavailable.
 
 Environment:
   JIRA_API_TOKEN   scoped token for the svc-itsm-router service account (Bearer)
-  SLACK_BOT_TOKEN  Slack bot token with chat:write (needed only when posting)
+  SLACK_BOT_TOKEN  Slack bot token with chat:write (posting) and users.profile:read (--statuses)
 
 Exit codes: 0 = run finished (or stopped by kill-switch / business hours),
             1 = config, credential or Jira error (no further action taken),
@@ -236,6 +236,40 @@ def render(sections, site_url=None):
     return "\n".join(lines)
 
 
+def print_statuses(args):
+    """Print each member's Slack status for the agent to judge. Read-only."""
+    try:
+        cfg = load_config(args.config)
+    except ConfigError as e:
+        print(f"config error: {e}")
+        return 1
+    token = os.environ.get("SLACK_BOT_TOKEN")
+    if not token:
+        print("SLACK_BOT_TOKEN is not set")
+        return 1
+    seen = set()
+    for m in cfg.get("team", []) + (cfg.get("keyword_routing") or []):
+        uid = m.get("slack_user_id")
+        if is_placeholder(uid) or uid in seen:
+            continue
+        seen.add(uid)
+        url = "https://slack.com/api/users.profile.get?" + urllib.parse.urlencode({"user": uid})
+        try:
+            resp = http("GET", url, token)
+            if not resp.get("ok"):
+                raise ApiError(resp.get("error"))
+        except ApiError as e:
+            print(f"{uid}  {m['name']}  lookup failed: {e}")
+            continue
+        p = resp.get("profile", {})
+        exp = p.get("status_expiration") or 0
+        until = datetime.fromtimestamp(exp, ZoneInfo(cfg["business_hours"]["timezone"])).strftime("%Y-%m-%d %H:%M") if exp else "none"
+        # json.dumps quotes the free text so a status can't break the line format.
+        print(f"{uid}  {m['name']}  text={json.dumps(p.get('status_text', ''), ensure_ascii=False)}  "
+              f"emoji={json.dumps(p.get('status_emoji', ''))}  expires={until}")
+    return 0
+
+
 def post_slack(channel, text):
     token = os.environ.get("SLACK_BOT_TOKEN")
     if not token:
@@ -406,7 +440,10 @@ def main():
     p.add_argument("--unavailable", metavar="SLACK_IDS",
                    help='comma-separated Slack user IDs judged out today; pass "" when nobody is out')
     p.add_argument("--no-post", action="store_true", help="print the summary only; do not post to Slack")
-    sys.exit(run(p.parse_args()))
+    p.add_argument("--statuses", action="store_true",
+                   help="only print each member's Slack status (read-only) for the availability judgment, then exit")
+    args = p.parse_args()
+    sys.exit(print_statuses(args) if args.statuses else run(args))
 
 
 if __name__ == "__main__":
