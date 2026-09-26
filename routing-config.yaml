@@ -107,6 +107,13 @@ keyword_routing:
     account_id: "712020:90cfbf3f-5038-454f-a00b-2481879f54c1"
     slack_user_id: "U07F596UTQR"     # bartosz.tomaszewski@sportalliance.com
     keywords: [network, wifi, wi-fi, hosting, odwijka]
+    # Optional backup: used ONLY when this member is out today (Slack status).
+    # The backup is also availability-checked and capped. If this member is merely
+    # at the per-run cap, the ticket is still deferred to the next run.
+    backup:
+      name: "Zachary Collins-Kenner"
+      account_id: "712020:a6f90367-2e5f-4746-9aaf-24a5427d467d"
+      slack_user_id: "U07EV44EX7W"     # zachary.collins-kenner@sportalliance.com
 
 # --- Team --------------------------------------------------------------------
 # target_pct values should sum to 100. The agent warns if they don't.

@@ -28,6 +28,8 @@ Per ticket, the router evaluates rules in this order:
    `keyword_routing`, it goes straight to that named specialist. These members have no
    `target_pct` and aren't part of the load-balanced pool — they own their category
    outright (e.g. Bartosz Tomaszewski gets all network/Wi-Fi/hosting/"odwijka" tickets).
+   An entry can name a `backup` who takes those tickets only when the owner is out today
+   (Bartosz → Zachary Collins-Kenner).
 3. **Skill match** — among the full `team`, those whose `skills` keywords appear in
    the ticket text.
 4. **Selection** — `load_balanced` picks whoever is furthest below their target %.

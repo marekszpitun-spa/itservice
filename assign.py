@@ -164,13 +164,21 @@ class Router:
                 return self._finish(key, eligible, {m["name"]: f"priority={priority}" for m in eligible})
 
         # c. keyword routing
-        rules = {}
+        rules, eligible = {}, []
         for m in self.keyword:
             hit = next((k for k in m.get("keywords", []) if matches(k, text, self.mode)), None)
-            if hit:
+            if not hit:
+                continue
+            b = m.get("backup")
+            if (m.get("slack_user_id") in self.unavailable and b
+                    and not is_placeholder(b.get("account_id"))):
+                eligible.append(b)
+                rules[b["name"]] = f'keyword="{hit}", backup for {m["name"]} (out today)'
+            else:
+                eligible.append(m)
                 rules[m["name"]] = f'keyword="{hit}"'
-        if rules:
-            return self._finish(key, [self.by_name[n] for n in rules], rules)
+        if eligible:
+            return self._finish(key, eligible, rules)
 
         # d. skill match, then fallback
         for m in self.team:
@@ -250,7 +258,8 @@ def print_statuses(args):
         print("SLACK_BOT_TOKEN is not set")
         return 1
     seen = set()
-    for m in cfg.get("team", []) + (cfg.get("keyword_routing") or []):
+    kw = cfg.get("keyword_routing") or []
+    for m in cfg.get("team", []) + kw + [k["backup"] for k in kw if k.get("backup")]:
         uid = m.get("slack_user_id")
         if is_placeholder(uid) or uid in seen:
             continue
@@ -403,7 +412,9 @@ def run(args):
         except ApiError as e:
             alerts.append((key, f"could not re-read status after assignment: {e}"))
 
-    names = {m.get("slack_user_id"): m["name"] for m in cfg["team"] + (cfg.get("keyword_routing") or [])}
+    kw = cfg.get("keyword_routing") or []
+    names = {m.get("slack_user_id"): m["name"]
+             for m in cfg["team"] + kw + [k["backup"] for k in kw if k.get("backup")]}
     header = (f"ITSM router — {'DRY RUN, no Jira writes' if dry_run else 'LIVE'} — {now:%Y-%m-%d %H:%M %Z}\n"
               f"{len(tickets)} unassigned found | {len(assigned)} {'would be ' if dry_run else ''}assigned | "
               f"{len(left)} left unassigned | {len(skipped)} skipped | {len(failed)} failed")
