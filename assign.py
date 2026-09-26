@@ -18,6 +18,7 @@ import os
 import random
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -27,7 +28,8 @@ from zoneinfo import ZoneInfo
 import yaml
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-DEFAULT_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "routing-config.yaml")
+STATUS_RECHECK_DELAY_S = 15
+DEFAULT_CONFIG =os.path.join(os.path.dirname(os.path.abspath(__file__)), "routing-config.yaml")
 
 
 class ConfigError(Exception):
@@ -346,6 +348,7 @@ def run(args):
     shadow = Router(cfg, loads, unavailable, other) if cfg.get("shadow_compare") else None
 
     assigned, alerts, left, skipped, failed, diffs = [], [], [], [], [], []
+    to_recheck = []  # (key, status before assignment)
     for t in tickets:
         key, f = t["key"], t["fields"]
         try:
@@ -383,15 +386,22 @@ def run(args):
             except ApiError as e:
                 failed.append((key, f"assign to {member['name']} failed: {e}"))
                 continue
-            try:
-                after = jira.issue(key)["fields"]["status"]
-                if after["id"] != status["id"]:
-                    alerts.append((key, f"status changed by external automation after assignment "
-                                        f"({status['name']} -> {after['name']})"))
-            except ApiError as e:
-                alerts.append((key, f"could not re-read status after assignment: {e}"))
+            to_recheck.append((key, status))
         router.commit(member)
         assigned.append((key, f"-> {member['name']} ({rule})"))
+
+    # Jira automation reacts to the assignee change asynchronously (seen ~2s later
+    # on 2026-09-26), so re-check statuses only after a delay.
+    if to_recheck:
+        time.sleep(STATUS_RECHECK_DELAY_S)
+    for key, status in to_recheck:
+        try:
+            after = jira.issue(key)["fields"]["status"]
+            if after["id"] != status["id"]:
+                alerts.append((key, f"status changed by external automation after assignment "
+                                    f"({status['name']} -> {after['name']})"))
+        except ApiError as e:
+            alerts.append((key, f"could not re-read status after assignment: {e}"))
 
     names = {m.get("slack_user_id"): m["name"] for m in cfg["team"] + (cfg.get("keyword_routing") or [])}
     header = (f"ITSM router — {'DRY RUN, no Jira writes' if dry_run else 'LIVE'} — {now:%Y-%m-%d %H:%M %Z}\n"
