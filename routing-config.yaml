@@ -16,8 +16,8 @@ enabled: true
 dry_run: false
 
 # --- When the agent is allowed to act ----------------------------------------
-# Schedule: the routine is triggered ONCE per working day at 11:00, set in the
-# routine's Scheduled trigger (cron: 0 11 * * 1-5, timezone Europe/Berlin).
+# Schedule: the deployment runs TWICE per working day, 11:00 and 14:00, set in the
+# Managed Agents deployment (cron: 0 11,14 * * 1-5, timezone Europe/Berlin).
 # The bounds below are a safety guard only: if a run is ever started manually or
 # off-schedule, the agent still acts only on a weekday within these hours.
 business_hours:

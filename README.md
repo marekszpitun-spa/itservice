@@ -2,7 +2,9 @@
 
 A Claude Managed Agent that assigns unassigned IT Jira tickets to team members based
 on priority, dedicated keyword categories, skills, and configurable target percentages.
-Runs once per working day at 11:00 (Europe/Berlin) — works when your laptop is closed.
+Runs twice per working day at 11:00 and 14:00 (Europe/Berlin) — works when your laptop
+is closed. `max_per_run_per_person` applies per run, so one person can get up to twice
+that many tickets per day.
 
 All routing is done by `assign.py`, a deterministic script. The agent's only judgment
 call is reading Slack statuses to decide who is out today; it passes that list to the
